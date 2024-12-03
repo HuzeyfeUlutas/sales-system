@@ -1,4 +1,4 @@
-package com.hulutas.catalog_service.exception;
+package com.hulutas.inventory_service.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

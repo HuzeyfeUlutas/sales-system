@@ -1,12 +1,11 @@
 package com.hulutas.catalog_service.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.hulutas.catalog_service.dto.requests.CreateOrUpdateRequest;
 import com.hulutas.catalog_service.dto.requests.Filter;
 import com.hulutas.catalog_service.dto.responses.ProductResponse;
 import com.hulutas.catalog_service.exception.ProductAlreadyExistsException;
 import com.hulutas.catalog_service.exception.ProductNotFoundException;
+import com.hulutas.catalog_service.grpc.InventoryClientService;
 import com.hulutas.catalog_service.mapper.ProductMapper;
 import com.hulutas.catalog_service.model.Product;
 import com.hulutas.catalog_service.repository.ProductRepository;
@@ -16,8 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,16 +26,22 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final InventoryClientService inventoryClientService;
 
     @Override
     @Cacheable(value = "products", key = "'all_products'")
     public List<ProductResponse> getAll(Filter filter) {
+        try {
+            boolean a =  inventoryClientService.checkStockStatus();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         List<Product> products = productRepository.findAll(ProductSpecification.getProductSpecifications(filter));
 
         if(products.isEmpty())
             throw new ProductNotFoundException("No products found in the catalog with filtered");
 
-        return products.stream().map(productMapper :: toDto).toList();
+        return products.stream().map(productMapper :: toDto).collect(Collectors.toList());
     }
 
     @Override
@@ -47,6 +54,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @CacheEvict(value = "products", key = "'all_products'")
+    @Transactional
     public ProductResponse createProduct(CreateOrUpdateRequest createOrUpdateRequest) {
         if (productRepository.findByCode(createOrUpdateRequest.code()).isPresent()) {
             throw new ProductAlreadyExistsException("Product with code " + createOrUpdateRequest.code() + " already exists.");
@@ -54,7 +62,6 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = productMapper.toEntity(createOrUpdateRequest);
         Product response = productRepository.save(product);
-
 
         return productMapper.toDto(response);
     }
