@@ -4,40 +4,118 @@ import com.hulutas.InventoryServiceGrpc;
 import com.hulutas.StockRequest;
 import com.hulutas.StockResponse;
 import com.hulutas.StockSaveOrUpdateResponse;
+import com.hulutas.inventory_service.exception.InventoryAlreadyExistsException;
+import com.hulutas.inventory_service.exception.InventoryNotFoundException;
+import com.hulutas.inventory_service.model.Inventory;
+import com.hulutas.inventory_service.repository.InventoryRepository;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import lombok.AllArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
 
 @GrpcService
+@AllArgsConstructor
 public class InventoryGrpcService extends InventoryServiceGrpc.InventoryServiceImplBase {
+
+    private final InventoryRepository inventoryRepository;
 
     @Override
     public void updateStock(StockRequest request, StreamObserver<StockSaveOrUpdateResponse> responseObserver) {
-        StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
-                .setSuccess(true)
-                .build();
+        try {
+            Inventory product = inventoryRepository.findByProductCode(request.getProductCode()).orElseThrow(() -> new InventoryNotFoundException("Product with code " + request.getProductCode() + " not found in inventory"));
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            product.setStockQuantity(request.getQuantity());
+
+            inventoryRepository.save(product);
+            StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
+                    .setSuccess(true)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }catch (InventoryNotFoundException ex) {
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(ex.getMessage())
+                    .asRuntimeException());
+        }catch (Exception ex) {
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("An unexpected error occurred")
+                    .asRuntimeException());
+        }
     }
 
     @Override
     public void saveStock(StockRequest request, StreamObserver<StockSaveOrUpdateResponse> responseObserver) {
-        StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
-                .setSuccess(true)
-                .build();
+        try {
+            if (inventoryRepository.findByProductCode(request.getProductCode()).isPresent())
+                throw new InventoryAlreadyExistsException("Product with code " + request.getProductCode() + " already exists in inventory");
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            Inventory product = new Inventory(request.getProductCode(), request.getQuantity());
+            inventoryRepository.save(product);
+
+            StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
+                    .setSuccess(true)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }catch (InventoryAlreadyExistsException ex) {
+            responseObserver.onError(Status.ALREADY_EXISTS
+                    .withDescription(ex.getMessage())
+                    .asRuntimeException());
+        }catch (Exception ex) {
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("An unexpected error occurred")
+                    .asRuntimeException());
+        }
     }
 
     @Override
     public void checkStock(StockRequest request, StreamObserver<StockResponse> responseObserver) {
-        StockResponse response = StockResponse.newBuilder()
-                .setIsAvailable(true)
-                .setMessage("OK")
-                .build();
+        try {
+            Inventory product = inventoryRepository.findByProductCode(request.getProductCode()).orElseThrow(() -> new InventoryNotFoundException("Product with code " + request.getProductCode() + " not found in inventory"));
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            inventoryRepository.save(product);
+            StockResponse response = StockResponse.newBuilder()
+                    .setIsAvailable(product.getStockQuantity() > 0)
+                    .build();
+
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }catch (InventoryNotFoundException ex) {
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(ex.getMessage())
+                    .asRuntimeException());
+        }catch (Exception ex) {
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("An unexpected error occurred")
+                    .asRuntimeException());
+        }
+    }
+
+    @Override
+    public void deleteStock(StockRequest request, StreamObserver<StockSaveOrUpdateResponse> responseObserver) {
+        try {
+            Inventory product = inventoryRepository.findByProductCode(request.getProductCode()).orElseThrow(() -> new InventoryNotFoundException("Product with code " + request.getProductCode() + " not found in inventory"));
+
+            product.setDeleted(true);
+            inventoryRepository.save(product);
+
+            StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
+                    .setSuccess(true)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }catch (InventoryNotFoundException ex) {
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(ex.getMessage())
+                    .asRuntimeException());
+        }catch (Exception ex) {
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("An unexpected error occurred")
+                    .asRuntimeException());
+        }
     }
 }

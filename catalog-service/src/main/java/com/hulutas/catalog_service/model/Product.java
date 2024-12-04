@@ -35,4 +35,7 @@ public class Product extends BaseEntity<UUID> {
 
     @Column(name = "has_stock", nullable = false)
     private boolean hasStock;
+
+    @Column(name = "unlimeted", nullable = false)
+    private boolean unlimited;
 }

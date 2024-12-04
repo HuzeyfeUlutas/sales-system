@@ -8,6 +8,7 @@ service InventoryService {
   rpc CheckStock (StockRequest) returns (StockResponse);
   rpc UpdateStock (StockRequest) returns (StockSaveOrUpdateResponse);
   rpc SaveStock (StockRequest) returns (StockSaveOrUpdateResponse);
+  rpc DeleteStock (StockRequest) returns (StockSaveOrUpdateResponse);
 }
 
 message StockRequest {

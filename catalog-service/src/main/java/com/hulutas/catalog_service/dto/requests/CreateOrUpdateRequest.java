@@ -11,6 +11,8 @@ public record CreateOrUpdateRequest(
         String code,
         @NotNull
         boolean hasStock,
+        @NotNull
+        boolean unlimited,
         int stock,
         @NotNull
         double price

@@ -31,11 +31,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Cacheable(value = "products", key = "'all_products'")
     public List<ProductResponse> getAll(Filter filter) {
-        try {
-            boolean a =  inventoryClientService.checkStockStatus();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         List<Product> products = productRepository.findAll(ProductSpecification.getProductSpecifications(filter));
 
         if(products.isEmpty())
@@ -63,23 +58,45 @@ public class ProductServiceImpl implements ProductService {
         Product product = productMapper.toEntity(createOrUpdateRequest);
         Product response = productRepository.save(product);
 
+        try {
+            boolean stockSavedStatus = inventoryClientService.saveStockStatus(createOrUpdateRequest.code(), createOrUpdateRequest.stock());
+            if (!stockSavedStatus)
+                throw new RuntimeException("Failed to save stock via GRPC");
+        } catch (Exception ex){
+            throw new RuntimeException("Error while saving stock: " + ex.getMessage(), ex);
+        }
+
         return productMapper.toDto(response);
     }
 
     @Override
     @CacheEvict(value = "products", key = "'all_products'")
+    @Transactional
     public ProductResponse updateProduct(CreateOrUpdateRequest createOrUpdateRequest) {
-        if (productRepository.findByCode(createOrUpdateRequest.code()).isEmpty()) {
-            throw new ProductNotFoundException("Product with code " + createOrUpdateRequest.code() + " not found.");
-        }
-        Product product = productMapper.toEntity(createOrUpdateRequest);
+        Product product = productRepository.findByCode(createOrUpdateRequest.code()).orElseThrow(() -> new ProductNotFoundException("Product with code " + createOrUpdateRequest.code() + " not found"));
+
+        product.setPrice(createOrUpdateRequest.price());
+        product.setHasStock(createOrUpdateRequest.hasStock());
+        product.setName(createOrUpdateRequest.name());
+        product.setUnlimited(createOrUpdateRequest.unlimited());
+        product.setDescription(createOrUpdateRequest.description());
+
         Product response = productRepository.save(product);
 
+        try {
+            boolean updateStockStatus = inventoryClientService.updateStockStatus(createOrUpdateRequest.code(), createOrUpdateRequest.stock());
+            if (!updateStockStatus)
+                throw new RuntimeException("Failed to update stock via GRPC");
+        } catch (Exception ex){
+            throw new RuntimeException("Error while updating stock: " + ex.getMessage(), ex);
+        }
+
         return productMapper.toDto(response);
     }
 
     @Override
     @CacheEvict(value = "products", key = "'all_products'")
+    @Transactional
     public ProductResponse deleteProduct(String productCode) {
         Product product = productRepository.findByCode(productCode).orElseThrow(() -> new ProductNotFoundException("Product with code " + productCode + " not found"));
 
@@ -87,6 +104,13 @@ public class ProductServiceImpl implements ProductService {
 
         Product response = productRepository.save(product);
 
+        try {
+            boolean stockDeletedStatus = inventoryClientService.deleteStockStatus(productCode, response.hashCode());
+            if (!stockDeletedStatus)
+                throw new RuntimeException("Failed to delete stock via GRPC");
+        } catch (Exception ex){
+            throw new RuntimeException("Error while deleting stock: " + ex.getMessage(), ex);
+        }
 
         return productMapper.toDto(response);
     }
