@@ -61,6 +61,7 @@ public class InventoryServiceImpl implements InventoryService {
 
 
         product.setStockQuantity(createOrUpdateRequest.stockQuantity());
+        product.setUnlimited(createOrUpdateRequest.unlimited());
 
         Inventory response = inventoryRepository.save(product);
 
@@ -81,6 +82,9 @@ public class InventoryServiceImpl implements InventoryService {
     @Transactional
     public boolean stockUpdate(String productCode, int quantity) {
         Inventory product = inventoryRepository.findByProductCode(productCode).orElseThrow(() -> new InventoryNotFoundException("Product with code " + productCode + " not found in inventory"));
+
+        if(product.isUnlimited())
+            return true;
 
         if (product.getStockQuantity() < quantity)
             return false;

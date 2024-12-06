@@ -12,5 +12,6 @@ public interface ProductService {
     ProductResponse createProduct(CreateOrUpdateRequest createOrUpdateRequest);
     ProductResponse updateProduct(CreateOrUpdateRequest createOrUpdateRequest);
     ProductResponse deleteProduct(String productCode);
+    boolean checkStockByProductId(String productCode);
 
 }

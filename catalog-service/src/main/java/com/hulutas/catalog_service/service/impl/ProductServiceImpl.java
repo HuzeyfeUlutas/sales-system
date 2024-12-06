@@ -59,7 +59,7 @@ public class ProductServiceImpl implements ProductService {
         Product response = productRepository.save(product);
 
         try {
-            boolean stockSavedStatus = inventoryClientService.saveStockStatus(createOrUpdateRequest.code(), createOrUpdateRequest.stock());
+            boolean stockSavedStatus = inventoryClientService.saveStockStatus(createOrUpdateRequest.code(), createOrUpdateRequest.stock(), createOrUpdateRequest.unlimited());
             if (!stockSavedStatus)
                 throw new RuntimeException("Failed to save stock via GRPC");
         } catch (Exception ex){
@@ -84,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
         Product response = productRepository.save(product);
 
         try {
-            boolean updateStockStatus = inventoryClientService.updateStockStatus(createOrUpdateRequest.code(), createOrUpdateRequest.stock());
+            boolean updateStockStatus = inventoryClientService.updateStockStatus(createOrUpdateRequest.code(), createOrUpdateRequest.stock(), createOrUpdateRequest.unlimited());
             if (!updateStockStatus)
                 throw new RuntimeException("Failed to update stock via GRPC");
         } catch (Exception ex){
@@ -113,5 +113,14 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return productMapper.toDto(response);
+    }
+
+    @Override
+    public boolean checkStockByProductId(String productCode) {
+        try {
+            return inventoryClientService.checkStockStatus(productCode);
+        } catch (Exception ex){
+            throw new RuntimeException("Error while checking stock: " + ex.getMessage(), ex);
+        }
     }
 }

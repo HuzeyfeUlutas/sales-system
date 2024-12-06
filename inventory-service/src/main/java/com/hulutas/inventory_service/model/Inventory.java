@@ -21,4 +21,5 @@ public class Inventory extends BaseEntity {
     private String productCode;
     @PositiveOrZero(message = "Stock quantity must be positive")
     private int stockQuantity;
+    private boolean unlimited;
 }

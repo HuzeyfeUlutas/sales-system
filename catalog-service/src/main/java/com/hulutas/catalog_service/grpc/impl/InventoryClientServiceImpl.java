@@ -17,9 +17,9 @@ public class InventoryClientServiceImpl implements InventoryClientService {
     InventoryServiceGrpc.InventoryServiceStub asynchClient;*/
 
     @Override
-    public boolean checkStockStatus(String productCode, int quantity) throws InterruptedException {
+    public boolean checkStockStatus(String productCode) throws InterruptedException {
         StockRequest request = StockRequest.newBuilder()
-                .setProductCode(productCode).setQuantity(quantity).build();
+                .setProductCode(productCode).build();
 
         StockResponse response = synchClient.checkStock(request);
 
@@ -27,9 +27,9 @@ public class InventoryClientServiceImpl implements InventoryClientService {
     }
 
     @Override
-    public boolean updateStockStatus(String productCode, int quantity) throws InterruptedException {
+    public boolean updateStockStatus(String productCode, int quantity, boolean unlimited) throws InterruptedException {
         StockRequest request = StockRequest.newBuilder()
-                .setProductCode(productCode).setQuantity(quantity).build();
+                .setProductCode(productCode).setQuantity(quantity).setUnlimited(unlimited).build();
 
         StockSaveOrUpdateResponse response = synchClient.updateStock(request);
 
@@ -47,9 +47,9 @@ public class InventoryClientServiceImpl implements InventoryClientService {
     }
 
     @Override
-    public boolean saveStockStatus(String productCode, int quantity) throws InterruptedException {
+    public boolean saveStockStatus(String productCode, int quantity, boolean unlimited) throws InterruptedException {
         StockRequest request = StockRequest.newBuilder()
-                .setProductCode(productCode).setQuantity(quantity).build();
+                .setProductCode(productCode).setQuantity(quantity).setUnlimited(unlimited).build();
 
         StockSaveOrUpdateResponse response = synchClient.saveStock(request);
 

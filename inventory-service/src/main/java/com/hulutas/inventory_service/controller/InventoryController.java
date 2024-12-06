@@ -1,6 +1,7 @@
 package com.hulutas.inventory_service.controller;
 
 import com.hulutas.inventory_service.dto.requests.CreateOrUpdateRequest;
+import com.hulutas.inventory_service.dto.requests.StockUpdateRequest;
 import com.hulutas.inventory_service.dto.response.InventoryResponse;
 import com.hulutas.inventory_service.service.InventoryService;
 import jakarta.validation.Valid;
@@ -40,9 +41,9 @@ public class InventoryController {
     }
 
     @PostMapping("/stockUpdate")
-    public boolean stockUpdate(@RequestBody CreateOrUpdateRequest createOrUpdateRequest) {
+    public boolean stockUpdate(@RequestBody StockUpdateRequest stockUpdateRequest) {
 
-        return inventoryService.stockUpdate(createOrUpdateRequest.productCode(), createOrUpdateRequest.stockQuantity());
+        return inventoryService.stockUpdate(stockUpdateRequest.productCode(), stockUpdateRequest.stockQuantity());
     }
 
     @DeleteMapping("/{productCode}")

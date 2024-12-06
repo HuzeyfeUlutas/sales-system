@@ -18,6 +18,12 @@ public class ProductController {
 
     private final ProductService productService;
 
+    @GetMapping("/check/{productCode}")
+    public boolean checkStockWithProductId(@PathVariable String productCode) {
+
+        return productService.checkStockByProductId(productCode);
+    }
+
     @GetMapping()
     public List<ProductResponse> getAll(@ModelAttribute Filter filter) {
 

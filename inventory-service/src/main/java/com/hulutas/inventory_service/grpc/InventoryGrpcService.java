@@ -50,7 +50,7 @@ public class InventoryGrpcService extends InventoryServiceGrpc.InventoryServiceI
             if (inventoryRepository.findByProductCode(request.getProductCode()).isPresent())
                 throw new InventoryAlreadyExistsException("Product with code " + request.getProductCode() + " already exists in inventory");
 
-            Inventory product = new Inventory(request.getProductCode(), request.getQuantity());
+            Inventory product = new Inventory(request.getProductCode(), request.getQuantity(), request.getUnlimited());
             inventoryRepository.save(product);
 
             StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
@@ -75,9 +75,8 @@ public class InventoryGrpcService extends InventoryServiceGrpc.InventoryServiceI
         try {
             Inventory product = inventoryRepository.findByProductCode(request.getProductCode()).orElseThrow(() -> new InventoryNotFoundException("Product with code " + request.getProductCode() + " not found in inventory"));
 
-            inventoryRepository.save(product);
             StockResponse response = StockResponse.newBuilder()
-                    .setIsAvailable(product.getStockQuantity() > 0)
+                    .setIsAvailable(product.getStockQuantity() > 0 || product.isUnlimited())
                     .build();
 
 
