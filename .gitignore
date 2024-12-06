@@ -1,1 +1,4 @@
 /.idea/
+/rabbitmq-lib/
+/rabbitmq-lib/target/
+/rabbitmq-lib/.idea/

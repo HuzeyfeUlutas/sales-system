@@ -13,6 +13,7 @@
         <module>discovery-server</module>
         <module>inventory-service</module>
         <module>proto-lib</module>
+        <module>rabbitmq-lib</module>
     </modules>
 
     <developers>
