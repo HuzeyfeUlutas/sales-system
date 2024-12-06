@@ -1,6 +1,10 @@
-package com.hulutas.common;
+package com.hulutas.inventory_service.config;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,6 +14,11 @@ public class RabbitMQConfig {
     public static final String STOCK_DEPLETED_QUEUE = "stock.depleted.queue";
     public static final String STOCK_DEPLETED_EXCHANGE = "stock.depleted.exchange";
     public static final String STOCK_DEPLETED_ROUTING_KEY = "stock.depleted.routing.key";
+
+    @Bean
+    public Jackson2JsonMessageConverter jackson2JsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
 
     @Bean
     public Queue stockDepletedQueue() {

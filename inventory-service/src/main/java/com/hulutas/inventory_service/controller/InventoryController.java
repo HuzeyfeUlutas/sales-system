@@ -39,6 +39,12 @@ public class InventoryController {
         return inventoryService.updateInventory(createOrUpdateRequest);
     }
 
+    @PostMapping("/stockUpdate")
+    public boolean stockUpdate(@RequestBody CreateOrUpdateRequest createOrUpdateRequest) {
+
+        return inventoryService.stockUpdate(createOrUpdateRequest.productCode(), createOrUpdateRequest.stockQuantity());
+    }
+
     @DeleteMapping("/{productCode}")
     public InventoryResponse delete(@PathVariable String productCode) {
 

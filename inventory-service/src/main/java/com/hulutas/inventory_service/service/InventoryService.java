@@ -11,4 +11,5 @@ public interface InventoryService {
     InventoryResponse createInventory(CreateOrUpdateRequest createOrUpdateRequest);
     InventoryResponse updateInventory(CreateOrUpdateRequest createOrUpdateRequest);
     InventoryResponse deleteInventory(String productCode);
+    boolean stockUpdate(String productCode, int quantity);
 }

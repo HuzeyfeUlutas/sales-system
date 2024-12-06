@@ -1,4 +1,4 @@
-package com.hulutas.common;
+package com.hulutas.inventory_service.dto.events;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
