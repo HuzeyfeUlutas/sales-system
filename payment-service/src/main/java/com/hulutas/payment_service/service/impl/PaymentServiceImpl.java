@@ -48,10 +48,10 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private boolean mockCreditCardProcessing(BigDecimal amount) {
-        return amount.compareTo(BigDecimal.valueOf(1000)) <= 0;
+        return true;
     }
 
     private boolean mockEftProcessing(BigDecimal amount) {
-        return amount.compareTo(BigDecimal.valueOf(5000)) <= 0;
+        return false;
     }
 }

@@ -1,4 +1,4 @@
-package com.hulutas.payment_service.config;
+package com.hulutas.order_service.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -43,7 +43,7 @@ public class RabbitMQConfig {
     }
     @Bean
     public Binding bindingPaymentResultFailure(Queue paymentResultFailureQueue, DirectExchange orderServiceExchange) {
-        return BindingBuilder.bind(paymentResultFailureQueue).to(orderServiceExchange).with(PAYMENT_RESULT_FAILURE_ROUTING_KEY);
+    return BindingBuilder.bind(paymentResultFailureQueue).to(orderServiceExchange).with(PAYMENT_RESULT_FAILURE_ROUTING_KEY);
     }
     @Bean
     public Binding bindingPaymentResultSuccess(Queue paymentResultSuccessQueue, DirectExchange orderServiceExchange) {

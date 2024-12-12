@@ -12,6 +12,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.AllArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.springframework.transaction.annotation.Transactional;
 
 @GrpcService
 @AllArgsConstructor
@@ -20,6 +21,7 @@ public class InventoryGrpcService extends InventoryServiceGrpc.InventoryServiceI
     private final InventoryRepository inventoryRepository;
 
     @Override
+    @Transactional
     public void updateStock(StockRequest request, StreamObserver<StockSaveOrUpdateResponse> responseObserver) {
         try {
             Inventory product = inventoryRepository.findByProductCode(request.getProductCode()).orElseThrow(() -> new InventoryNotFoundException("Product with code " + request.getProductCode() + " not found in inventory"));
@@ -27,6 +29,60 @@ public class InventoryGrpcService extends InventoryServiceGrpc.InventoryServiceI
             product.setStockQuantity(request.getQuantity());
 
             inventoryRepository.save(product);
+            StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
+                    .setSuccess(true)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }catch (InventoryNotFoundException ex) {
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(ex.getMessage())
+                    .asRuntimeException());
+        }catch (Exception ex) {
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("An unexpected error occurred")
+                    .asRuntimeException());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void orderStock(StockRequest request, StreamObserver<StockSaveOrUpdateResponse> responseObserver) {
+        try {
+            Inventory product = inventoryRepository.findByProductCode(request.getProductCode()).orElseThrow(() -> new InventoryNotFoundException("Product with code " + request.getProductCode() + " not found in inventory"));
+
+            if (!product.isUnlimited()) {
+                product.setStockQuantity(product.getStockQuantity() - request.getQuantity());
+                inventoryRepository.save(product);
+            }
+            StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
+                    .setSuccess(true)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }catch (InventoryNotFoundException ex) {
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(ex.getMessage())
+                    .asRuntimeException());
+        }catch (Exception ex) {
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("An unexpected error occurred")
+                    .asRuntimeException());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void rolebackStock(StockRequest request, StreamObserver<StockSaveOrUpdateResponse> responseObserver) {
+        try {
+            Inventory product = inventoryRepository.findByProductCode(request.getProductCode()).orElseThrow(() -> new InventoryNotFoundException("Product with code " + request.getProductCode() + " not found in inventory"));
+
+            if (!product.isUnlimited()) {
+                product.setStockQuantity(product.getStockQuantity() + request.getQuantity());
+                inventoryRepository.save(product);
+            }
             StockSaveOrUpdateResponse response = StockSaveOrUpdateResponse.newBuilder()
                     .setSuccess(true)
                     .build();
@@ -76,7 +132,7 @@ public class InventoryGrpcService extends InventoryServiceGrpc.InventoryServiceI
             Inventory product = inventoryRepository.findByProductCode(request.getProductCode()).orElseThrow(() -> new InventoryNotFoundException("Product with code " + request.getProductCode() + " not found in inventory"));
 
             StockResponse response = StockResponse.newBuilder()
-                    .setIsAvailable(product.getStockQuantity() > 0 || product.isUnlimited())
+                    .setIsAvailable((product.getStockQuantity() > 0 && product.getStockQuantity() >= request.getQuantity()) || product.isUnlimited())
                     .build();
 
 
