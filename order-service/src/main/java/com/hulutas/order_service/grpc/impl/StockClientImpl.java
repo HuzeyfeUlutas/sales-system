@@ -14,9 +14,9 @@ public class StockClientImpl implements StockClient {
     InventoryServiceGrpc.InventoryServiceBlockingStub synchClient;
 
     @Override
-    public boolean checkStockStatus(String productCode) {
+    public boolean checkStockStatus(String productCode, int quantity) {
         StockRequest request = StockRequest.newBuilder()
-                .setProductCode(productCode).build();
+                .setProductCode(productCode).setQuantity(quantity).build();
 
         StockResponse response = synchClient.checkStock(request);
 

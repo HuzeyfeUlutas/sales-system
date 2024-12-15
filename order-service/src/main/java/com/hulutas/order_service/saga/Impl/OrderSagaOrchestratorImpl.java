@@ -27,7 +27,7 @@ public class OrderSagaOrchestratorImpl implements OrderSagaOrchestrator {
     public void startSaga(Order order) {
         try {
             for (OrderItem item : order.getItems()) {
-                boolean isAvailable = stockClient.checkStockStatus(item.getProductId());
+                boolean isAvailable = stockClient.checkStockStatus(item.getProductId(), item.getQuantity());
                 if (!isAvailable) {
                     throw new Exception("Insufficient stock");
                 }
