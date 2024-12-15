@@ -14,6 +14,7 @@ import com.hulutas.catalog_service.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final InventoryClientService inventoryClientService;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     @Cacheable(value = "products", key = "'all_products'")
